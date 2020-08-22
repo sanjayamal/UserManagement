@@ -48,16 +48,14 @@ export async function getUser(accessToken:string){
 
 export async function deleteUser(accessToken:string,id:any){
   const client = getAuthenticatedClient(accessToken);
-  await client.api(`/users/${id}`).delete()
-              .then((res:any) => res);
-  //return res;
+  let res=await client.api(`/users/${id}`).delete()
+  return res;
 }
 
 export async function updateUser(accessToken:string,user:any){
    const {id}=user;
    console.log(id)
    const client = getAuthenticatedClient(accessToken);
-   await client.api(`/users/${id}`).update(user)
-                .then((res:any) => res);
-  //return res;
+   let res= await client.api(`/users/${id}`).update(user)
+  return res;
 }

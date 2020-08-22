@@ -2,25 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { config } from './Config';
 import { UserAgentApplication } from 'msal';
 import { getUser, deleteUser, updateUser } from './GraphService';
-import { Table, Button, Anchor, Drawer, Form, Input, Switch } from 'antd';
+import { Table, Button, Drawer, Form, Input, Switch } from 'antd';
 import 'antd/dist/antd.css';
-
 
 const User = () => {
 
     const [users, setUser] = useState<any>([]);
-    const { Link } = Anchor;
     const [drawerVisible, setDrawerVisible] = useState<boolean>(false)
     const [user, setOneUser] = useState<any>();
-
-
-
 
     useEffect(() => {
         getUserService().then(result => {
             console.log(result)
         });
-    }, []);
+    }, [user]);
 
     const columns = [
         {
@@ -41,12 +36,7 @@ const User = () => {
                 <Button onClick={() => { userDelete(key) }}>Delete</Button>
             </>,
         },
-        // {
-        //     title: 'Action',
-        //     dataIndex: '',
-        //     key: 'x',
-        //     render: () => <a>Delete</a>
-        // },
+
     ];
 
     const userAgentApplication = new UserAgentApplication({
@@ -60,17 +50,6 @@ const User = () => {
         }
     });
 
-    const isInteractionRequired = (error: Error): boolean => {
-        if (!error.message || error.message.length <= 0) {
-            return false;
-        }
-
-        return (
-            error.message.indexOf('consent_required') > -1 ||
-            error.message.indexOf('interaction_required') > -1 ||
-            error.message.indexOf('login_required') > -1
-        );
-    }
 
     const getAccessToken = async (scopes: string[]) => {
 
@@ -120,19 +99,43 @@ const User = () => {
 
     }
 
+ 
+    const userUpdateSave = async (values: any) => {
+
+        const accessToken = await getAccessToken(config.scopes);
+        values.id = values.id !== undefined ? values.id : (user.id !== null ? user.id : '');
+        values.displayName = values.displayName !== undefined || null ? values.displayName : (user.displayName !== null ? user.displayName : '');
+        values.givenName = values.givenName !== undefined || null ? values.givenName : (user.givenName !== null ? user.givenName : null);
+        values.jobTitle = values.jobTitle !== undefined || null ? values.jobTitle : (user.jobTitle !== null ? user.jobTitle : null);
+        values.mobilePhone = values.mobilePhone !== undefined || null ? values.mobilePhone : (user.mobilePhone !== null ? user.mobilePhone : null);
+        values.officeLocation = values.officeLocation !== undefined || null ? values.officeLocation : (user.officeLocation !== null ? user.officeLocation : null);
+        values.surname = values.surname !== undefined || null ? values.surname : (user.surname !== null ? user.surname : null);
+        values.userPrincipalName = values.userPrincipalName !== undefined || null ? values.userPrincipalName : (user.userPrincipalName !== null ? user.userPrincipalName : null);
+        values.mail = values.mail !== undefined || null ? values.mail : (user.mail !== null ? user.mail : null);
+
+        updateUser(accessToken, values)
+            .then((res: any) => {
+                setDrawerVisible(false);
+                setOneUser(values)
+            })
+    }
+
     const onClose = () => {
         setDrawerVisible(false)
     }
 
-    const userUpdateSave = async (user: any) => {
-        
-        const accessToken = await getAccessToken(config.scopes);
-     //   setOneUser(user)
-        console.log(user)
+    const isInteractionRequired = (error: Error): boolean => {
+        if (!error.message || error.message.length <= 0) {
+            return false;
+        }
 
-        updateUser(accessToken, user)
-            .then(res => res)
+        return (
+            error.message.indexOf('consent_required') > -1 ||
+            error.message.indexOf('interaction_required') > -1 ||
+            error.message.indexOf('login_required') > -1
+        );
     }
+
 
     return (
         <>
@@ -152,17 +155,17 @@ const User = () => {
 
             >
                 <Form
-                    onFinish={(values)=>userUpdateSave(values)}
+                    onFinish={userUpdateSave}
                     initialValues={{
-                        'displayName': user === undefined ? '' : (user.displayName !== null? user.displayName : ''),
-                        'givenName': user === undefined ? '' : (user.givenName !== null? user.givenName : ''),
-                        'id': user === undefined ? '' : (user.id !== null? user.id : ''),
-                        'jobTitle': user === undefined ? '' : (user.jobTitle !== null? user.jobTitle : ''),
-                        'mobilePhone': user === undefined ? '' : (user.mobilePhone !== null? user.mobilePhone : ''),
-                        'officeLocation': user === undefined ? '' : (user.officeLocation !== null? user.officeLocation : ''),
-                        'surname': user === undefined ? '' : (user.surname !== null? user.surname : ''),
-                        'userPrincipalName': user === undefined ? '' : (user.userPrincipalName !== null? user.userPrincipalName : ''),
-                        'mail': user === undefined ? '' : (user.mail!== null ? user.mail : ''),
+                        'displayName': user === undefined ? '' : (user.displayName !== null ? user.displayName : ''),
+                        'givenName': user === undefined ? '' : (user.givenName !== null ? user.givenName : ''),
+                        'id': user === undefined ? '' : (user.id !== null ? user.id : ''),
+                        'jobTitle': user === undefined ? '' : (user.jobTitle !== null ? user.jobTitle : ''),
+                        'mobilePhone': user === undefined ? '' : (user.mobilePhone !== null ? user.mobilePhone : ''),
+                        'officeLocation': user === undefined ? '' : (user.officeLocation !== null ? user.officeLocation : ''),
+                        'surname': user === undefined ? '' : (user.surname !== null ? user.surname : ''),
+                        'userPrincipalName': user === undefined ? '' : (user.userPrincipalName !== null ? user.userPrincipalName : ''),
+                        'mail': user === undefined ? '' : (user.mail !== null ? user.mail : ''),
                     }}
                 >
 
