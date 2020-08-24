@@ -32,7 +32,7 @@ const User = () => {
             title: '',
             dataIndex: 'id',
             key: 'id',
-            render: (key: any, test: any) => <> <Button onClick={() => userUpdate(test)}>Update</Button>
+            render: (key: any, test: any) => <> <Button style={{'marginRight':'3px'}} onClick={() => userUpdate(test)}>Update</Button>
                 <Button onClick={() => { userDelete(key) }}>Delete</Button>
             </>,
         },
@@ -142,9 +142,9 @@ const User = () => {
             {/* <Anchor>
             <Button><Link href='/adduser' title=''/>  </Button> 
             </Anchor> */}
-            <Button href='/adduser'>Craete New User</Button>
+            <Button href='/adduser' >Create New User</Button>
             <br />
-            <Table dataSource={users} columns={columns} />
+            <Table dataSource={users} columns={columns} style={{'paddingTop':'10px'}}/>
 
             <Drawer
                 title="Create a new account"
