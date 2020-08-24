@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { config } from './Config';
 import { UserAgentApplication } from 'msal';
 import { getUser, deleteUser, updateUser } from './GraphService';
-import { Table, Button, Drawer, Form, Input, Switch } from 'antd';
+import { Table, Button, Drawer, Form, Input, Modal } from 'antd';
 import 'antd/dist/antd.css';
 
 const User = () => {
@@ -10,6 +10,7 @@ const User = () => {
     const [users, setUser] = useState<any>([]);
     const [drawerVisible, setDrawerVisible] = useState<boolean>(false)
     const [user, setOneUser] = useState<any>();
+    const { confirm } = Modal;
 
     useEffect(() => {
         getUserService().then(result => {
@@ -32,7 +33,8 @@ const User = () => {
             title: '',
             dataIndex: 'id',
             key: 'id',
-            render: (key: any, test: any) => <> <Button style={{'marginRight':'3px'}} onClick={() => userUpdate(test)}>Update</Button>
+            render: (key: any, test: any) => <>
+                <Button style={{ 'marginRight': '3px' }} onClick={() => userUpdate(test)}>Update</Button>
                 <Button onClick={() => { userDelete(key) }}>Delete</Button>
             </>,
         },
@@ -85,12 +87,23 @@ const User = () => {
     }
 
     const userDelete = async (id: any) => {
-        const data = users.filter((user: any) => user.id !== id)
-        setUser(data)
-        const accessToken = await getAccessToken(config.scopes);
-        deleteUser(accessToken, id)
-            .then(res => console.log(res))
-            .catch(res => console.log(res));
+
+        confirm({
+            title: 'Do you Want to delete these items?',
+            // content: 'Some descriptions',
+            async onOk() {
+                console.log('OK');
+                const data = users.filter((user: any) => user.id !== id)
+                setUser(data)
+                const accessToken = await getAccessToken(config.scopes);
+                deleteUser(accessToken, id)
+                    .then(res => console.log(res))
+                    .catch(res => console.log(res));
+            },
+            onCancel() {
+                console.log('Cancel');
+            },
+        });
     }
 
     const userUpdate = (user: any) => {
@@ -99,7 +112,7 @@ const User = () => {
 
     }
 
- 
+
     const userUpdateSave = async (values: any) => {
 
         const accessToken = await getAccessToken(config.scopes);
@@ -144,7 +157,7 @@ const User = () => {
             </Anchor> */}
             <Button href='/adduser' >Create New User</Button>
             <br />
-            <Table dataSource={users} columns={columns} style={{'paddingTop':'10px'}}/>
+            <Table dataSource={users} columns={columns} style={{ 'paddingTop': '10px' }} />
 
             <Drawer
                 title="Create a new account"
