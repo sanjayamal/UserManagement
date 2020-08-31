@@ -1,11 +1,10 @@
 import React from 'react';
-import { Form, Input, Button, Switch } from 'antd';
+import { Form, Input, Button, Switch,Row, Col   } from 'antd';
 import 'antd/dist/antd.css';
-import { Row, Col } from 'antd';
 import { createUser } from './GraphService';
 import { config } from './Config';
 import { UserAgentApplication } from 'msal';
-import {useHistory  } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 
 
 const AddUser = () => {
@@ -57,9 +56,9 @@ const AddUser = () => {
     }
 
     const passwordProfile = {
-        "forceChangePasswordNextSignIn": true,
+        "forceChangePasswordNextSignIn": false,
         "forceChangePasswordNextSignInWithMfa": false,
-        "password": "Rajitha111#"
+        "password": "Rajitha1111#"
     }
 
     const getMailNickName = (email: string) => {
@@ -72,15 +71,30 @@ const AddUser = () => {
             const accessToken = await getAccessToken(config.scopes);
             const { mail } = values;
             let mailNickname = getMailNickName(mail)[0]
-            const requestBody = { ...values, mailNickname, passwordProfile: { ...passwordProfile },userPrincipalName:mail }
-           
+
+            // const identities = [
+            //     {
+            //         "signInType": "emailAddress",
+            //         "issuer": "unicornrnd.onmicrosoft.com",
+            //         "issuerAssignedId": mail
+            //     }]
+            const requestBody = {
+                ...values,
+                mailNickname,
+                passwordProfile: { ...passwordProfile },
+                userPrincipalName: mail,
+                // identities: [...identities],
+                "passwordPolicies": "DisablePasswordExpiration"
+            }
+
             console.log('access', accessToken);
+            console.log(requestBody)
             createUser(accessToken, requestBody)
-            .then(res=>{
-                console.log(res);
-                history.push('/user')
-            });
-            
+                .then(res => {
+                    console.log(res);
+                    history.push('/user')
+                });
+
         } catch (error) {
 
             console.log(error);

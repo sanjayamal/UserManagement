@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { config } from './Config';
 import { UserAgentApplication } from 'msal';
-import { getUser, deleteUser, updateUser } from './GraphService';
-import { Table, Button, Drawer, Form, Input, Modal } from 'antd';
+import { getUser, deleteUser, updateUser, AdduserGroup, getGroup } from './GraphService';
+import { Table, Button, Drawer, Form, Input, Modal, Select } from 'antd';
 import 'antd/dist/antd.css';
 
 const User = () => {
@@ -10,13 +10,24 @@ const User = () => {
     const [users, setUser] = useState<any>([]);
     const [drawerVisible, setDrawerVisible] = useState<boolean>(false)
     const [user, setOneUser] = useState<any>();
+    const [userId, setUserId] = useState<any>();
+    const [groups, setGroups] = useState<any>([]);
+    const [groupId, setGroupId] = useState<any>();
+    const [visibleModel, setvisibleModel] = useState<boolean>();
     const { confirm } = Modal;
+    const { Option } = Select;
 
     useEffect(() => {
         getUserService().then(result => {
             console.log(result)
         });
+        getGroupToModel().then(result => {
+            console.log(result)
+        });
+
     }, [user]);
+
+
 
     const columns = [
         {
@@ -35,7 +46,9 @@ const User = () => {
             key: 'id',
             render: (key: any, test: any) => <>
                 <Button style={{ 'marginRight': '3px' }} onClick={() => userUpdate(test)}>Update</Button>
-                <Button onClick={() => { userDelete(key) }}>Delete</Button>
+                <Button style={{ 'marginRight': '3px' }} onClick={() => { UserGroup(key) }}>Group</Button>
+                <Button onClick={() => { userDelete(key) }} >Delete</Button>
+
             </>,
         },
 
@@ -77,6 +90,8 @@ const User = () => {
 
     const getUserService = async () => {
         const accessToken = await getAccessToken(config.scopes);
+        console.log(accessToken)
+
         getUser(accessToken)
             .then((result: any) => {
                 const { value } = result;
@@ -86,6 +101,36 @@ const User = () => {
 
     }
 
+    const getGroupToModel = async () => {
+        const accessToken = await getAccessToken(config.scopes);
+        getGroup(accessToken)
+            .then((result: any) => {
+                const { value } = result;
+                setGroups(value)
+                console.log(value)
+            });
+    }
+    const UserGroup = (id: any) => {
+        setUserId(id);
+        setvisibleModel(true);
+    }
+
+    const group = {
+        'members@odata.bind': [
+            `https://graph.microsoft.com/v1.0/directoryObjects/${userId}`
+        ]
+
+    };
+
+    const userAddGroup = async () => {
+        console.log(group)
+        const accessToken = await getAccessToken(config.scopes);
+        AdduserGroup(accessToken, groupId, group)
+            .then((result: any) => {
+                console.log(result)
+                setvisibleModel(false);
+            });
+    }
     const userDelete = async (id: any) => {
 
         confirm({
@@ -104,6 +149,8 @@ const User = () => {
                 console.log('Cancel');
             },
         });
+        // userAddGroup();
+
     }
 
     const userUpdate = (user: any) => {
@@ -126,6 +173,7 @@ const User = () => {
         values.userPrincipalName = values.userPrincipalName !== undefined || null ? values.userPrincipalName : (user.userPrincipalName !== null ? user.userPrincipalName : null);
         values.mail = values.mail !== undefined || null ? values.mail : (user.mail !== null ? user.mail : null);
 
+
         updateUser(accessToken, values)
             .then((res: any) => {
                 setDrawerVisible(false);
@@ -135,6 +183,13 @@ const User = () => {
 
     const onClose = () => {
         setDrawerVisible(false)
+    }
+    const handleCancel = () => {
+        setvisibleModel(false)
+    }
+
+    const onChangeGroup = (groupId: any) => {
+        setGroupId(groupId);
     }
 
     const isInteractionRequired = (error: Error): boolean => {
@@ -206,6 +261,41 @@ const User = () => {
                     </Form.Item>
                 </Form>
             </Drawer>
+
+            <Modal
+                visible={visibleModel}
+                title="Select Groups"
+                onOk={userAddGroup}
+                onCancel={handleCancel}
+                footer={[
+                    <Button key="back" onClick={handleCancel}>
+                        Return
+            </Button>,
+                    <Button key="submit" type="primary" onClick={userAddGroup}>
+                        Submit
+            </Button>,
+                ]}
+            >
+                <Select
+                    showSearch
+                    style={{ width: 200 }}
+                    placeholder="Select a Group"
+                    // optionFilterProp="children"
+                    onChange={onChangeGroup}
+                // onFocus={onFocus}
+                // onBlur={onBlur}
+                // onSearch={onSearch}
+                // filterOption={(input, option) =>
+                //     option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                // }
+                >
+                    {groups?.map((item: any) =>
+                        <Option key={item.id} value={item.id}>{item.displayName}</Option>
+
+                        //    console.log(item)
+                    )}
+                </Select>
+            </Modal>
 
         </>
     );

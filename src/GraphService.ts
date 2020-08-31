@@ -1,3 +1,4 @@
+
 var graph = require('@microsoft/microsoft-graph-client');
 
 function getAuthenticatedClient(accessToken: string) {
@@ -57,5 +58,20 @@ export async function updateUser(accessToken:string,user:any){
    console.log(id)
    const client = getAuthenticatedClient(accessToken);
    let res= await client.api(`/users/${id}`).update(user)
+  return res;
+}
+
+export async function AdduserGroup(accessToken:string,groupId:string,user:any){
+  
+  const client = getAuthenticatedClient(accessToken);
+  let res = await client.api(`/groups/${groupId}`)
+  .update(user);
+  return res;
+}
+
+export async function getGroup(accessToken:string){
+  const client = getAuthenticatedClient(accessToken);
+  let res = await client.api('/groups')
+  .get();
   return res;
 }
