@@ -61,11 +61,13 @@ export async function updateUser(accessToken:string,user:any){
   return res;
 }
 
-export async function AdduserGroup(accessToken:string,groupId:string,user:any){
+export async function addUserGroup(accessToken:string,groupId:string,user:any){
   
   const client = getAuthenticatedClient(accessToken);
   let res = await client.api(`/groups/${groupId}`)
   .update(user);
+  // let res = await client.api(`/groups/${groupId}/members/28c4665d-a57b-4dfb-bb1f-6a0e6e52f1a5/$ref`)
+	// .delete();
   return res;
 }
 
@@ -73,5 +75,19 @@ export async function getGroup(accessToken:string){
   const client = getAuthenticatedClient(accessToken);
   let res = await client.api('/groups')
   .get();
+  return res;
+}
+
+export async function getMemberGroups(accessToken:string,id:string,reqBody:any){
+  const client = getAuthenticatedClient(accessToken);
+  let res = await client.api(`/users/${id}/getMemberGroups`)
+  .post(reqBody);
+  return res;
+}
+
+export async function deleteUserGroup(accessToken:string,groupId:string,userId:any){
+  const client = getAuthenticatedClient(accessToken);
+  let res = await client.api(`/groups/${groupId}/members/${userId}/$ref`)
+	.delete();
   return res;
 }

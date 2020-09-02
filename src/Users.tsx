@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { config } from './Config';
 import { UserAgentApplication } from 'msal';
-import { getUser, deleteUser, updateUser, AdduserGroup, getGroup } from './GraphService';
+import { getUser, deleteUser, updateUser, addUserGroup, getGroup, getMemberGroups, deleteUserGroup } from './GraphService';
 import { Table, Button, Drawer, Form, Input, Modal, Select } from 'antd';
 import 'antd/dist/antd.css';
+import { DeleteOutlined } from '@ant-design/icons';
+import { constants } from 'buffer';
 
 const User = () => {
 
@@ -14,16 +16,14 @@ const User = () => {
     const [groups, setGroups] = useState<any>([]);
     const [groupId, setGroupId] = useState<any>();
     const [visibleModel, setvisibleModel] = useState<boolean>();
+    const [userGroups, setUserGroups] = useState<any>([]);
+
     const { confirm } = Modal;
     const { Option } = Select;
 
     useEffect(() => {
-        getUserService().then(result => {
-            console.log(result)
-        });
-        getGroupToModel().then(result => {
-            console.log(result)
-        });
+        getUserService();
+        getGroupToModel();
 
     }, [user]);
 
@@ -110,9 +110,18 @@ const User = () => {
                 console.log(value)
             });
     }
-    const UserGroup = (id: any) => {
+    const UserGroup = async (id: any) => {
+        console.log(groups)
+        const accessToken = await getAccessToken(config.scopes);
         setUserId(id);
         setvisibleModel(true);
+        getMemberGroups(accessToken, id, reqBody)
+            .then((result: any) => {
+                const { value } = result
+                console.log(result)
+                console.log(value)
+                setUserGroups(value);
+            })
     }
 
     const group = {
@@ -121,13 +130,14 @@ const User = () => {
         ]
 
     };
+    const reqBody = {
+        securityEnabledOnly: true
+    };
 
     const userAddGroup = async () => {
-        console.log(group)
         const accessToken = await getAccessToken(config.scopes);
-        AdduserGroup(accessToken, groupId, group)
+        addUserGroup(accessToken, groupId, group)
             .then((result: any) => {
-                console.log(result)
                 setvisibleModel(false);
             });
     }
@@ -137,7 +147,6 @@ const User = () => {
             title: 'Do you Want to delete these items?',
             // content: 'Some descriptions',
             async onOk() {
-                console.log('OK');
                 const data = users.filter((user: any) => user.id !== id)
                 setUser(data)
                 const accessToken = await getAccessToken(config.scopes);
@@ -153,6 +162,15 @@ const User = () => {
 
     }
 
+    const deleteMember = async (gId:any) => {
+        const accessToken = await getAccessToken(config.scopes);
+        deleteUserGroup(accessToken, gId, userId)
+            .then((result: any) => {
+                console.log(result)
+                setvisibleModel(false);
+            });
+       // console.log("delete member function",groupId)
+    }
     const userUpdate = (user: any) => {
         setDrawerVisible(true);
         setOneUser(user)
@@ -190,6 +208,7 @@ const User = () => {
 
     const onChangeGroup = (groupId: any) => {
         setGroupId(groupId);
+        console.log("onChange ",groupId)
     }
 
     const isInteractionRequired = (error: Error): boolean => {
@@ -204,12 +223,17 @@ const User = () => {
         );
     }
 
+    // const options:any = [];
+    // groups?.map((item: any) => {
+    //     const value = item.displayName;
+    //     options.push({
+    //         value
+    //     });
+    // })
+
 
     return (
         <>
-            {/* <Anchor>
-            <Button><Link href='/adduser' title=''/>  </Button> 
-            </Anchor> */}
             <Button href='/adduser' >Create New User</Button>
             <br />
             <Table dataSource={users} columns={columns} style={{ 'paddingTop': '10px' }} />
@@ -280,25 +304,28 @@ const User = () => {
                     showSearch
                     style={{ width: 200 }}
                     placeholder="Select a Group"
-                    // optionFilterProp="children"
                     onChange={onChangeGroup}
-                // onFocus={onFocus}
-                // onBlur={onBlur}
-                // onSearch={onSearch}
-                // filterOption={(input, option) =>
-                //     option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                // }
                 >
                     {groups?.map((item: any) =>
                         <Option key={item.id} value={item.id}>{item.displayName}</Option>
 
-                        //    console.log(item)
                     )}
                 </Select>
+
+                {groups?.filter((item: any) => userGroups.includes(item.id))
+                    .map((item: any) =>
+                        <div style={{ marginTop: '5px' }}>
+                            {item.displayName}
+                            <Button onClick={()=>deleteMember(item.id)} type="primary" shape="circle" icon={<DeleteOutlined />} size="small" style={{ marginLeft: '10px' }}>
+                            </Button>
+                        </div>
+                    )}
             </Modal>
 
         </>
     );
+
+
 
 }
 
